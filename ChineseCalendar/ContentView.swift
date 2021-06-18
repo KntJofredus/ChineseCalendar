@@ -7,126 +7,150 @@
 
 import SwiftUI
 
-//struct LabeliCon {
-//    static let on: Bool = true
-//}
-
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     // colorScheme == .dark
     
-    @ObservedObject var calendar: ChineseCalendar
+    @ObservedObject var li: LiJianZuo
     
     var body: some View {
-        VStack(alignment: .trailing, spacing: nil) {
-            YearBar(yearName: calendar.yearName, yearSubName: calendar.yearSubName)
-            MonthView(calendar: calendar)
-                .environment(\.layoutDirection, .rightToLeft)
+        ZStack {
+            Color(UIColor.systemGray6)
+                .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/)
+            
+            VStack(alignment: .center, spacing: nil) {
+
+                NianBiao(zhengtongNianFeng: li.yearName, baochengNianFeng: li.yearSubName, yueFeng: "", shuShi: false)
+                    .padding(5)
+                YueBiaoXiaoTu(li: li)
+                    .environment(\.layoutDirection, .rightToLeft)
+                    .background(Rectangle().colorInvert())
+            }
         }
-        .padding()
     }
 }
 
-
-struct MonthView: View {
-    @ObservedObject var calendar: ChineseCalendar
+struct YueBiaoXiaoTu: View {
+    @ObservedObject var li: LiJianZuo
 
     var body: some View {
-        HStack {
-            ForEach(1..<7) { hangOrd in
-                VStack {
-                    ForEach(1..<9) { hangId in
-                        if hangOrd == 1 && hangId == 1 {
-                            ZStack{
-                                Circle().foregroundColor(CalendarRed.scheme(.nippon))
-                                HuoZi(contents: [ Array(calendar.month.monthName) ])
-                                    .foregroundColor(.white)
-                            }
-                        }
-                        else if hangOrd == 1 || hangId == 1 {
-                            if hangOrd == 7 && !calendar.riList[35].inMonth {
-                                LabelGrid(texts: MonthView.getLabel(hangOrd: hangOrd, hangId: hangId, usePlugin: calendar.riList.count == 36)).hidden()
-                            }
-                            else {
-                                LabelGrid(texts: MonthView.getLabel(hangOrd: hangOrd, hangId: hangId, usePlugin: calendar.riList.count == 36))
-                            }
-                        }
-                        else {
-                            if (hangOrd == 6 && hangId == 2 && calendar.riList.count == 36) {
-                                RiGrid2(calendar: calendar,
-                                        ri: calendar.riList[ (hangOrd-2)*7+hangId-2 ],
-                                        ri2: calendar.riList[ 35 ])
-                            }
-                            else {
-                                if hangOrd == 7 && !calendar.riList[35].inMonth {
-                                    RiGrid(ri: calendar.riList[ (hangOrd-2)*7+hangId-2 ])
-                                        .onTapGesture(count:1, perform: {
-                                            calendar.chooseDay((hangOrd-2)*7+hangId-2)
-                                        }).hidden()
-                                }
-                                else {
-                                    RiGrid(ri: calendar.riList[ (hangOrd-2)*7+hangId-2 ])
-                                        .onTapGesture(count:1, perform: {
-                                            calendar.chooseDay((hangOrd-2)*7+hangId-2)
-                                        })
-                                }
-                            }
+        ZStack {
+            HStack { ForEach(0..<6) { hangOrdx in
+                VStack { ForEach(-1..<8) { hangIdx in
+                    if hangOrdx == 0 && hangIdx > 0{
+                        QiZhengDian(zi: YueBiaoXiaoTu.qiZheng[ hangIdx - 1 ])
+                    }
+                    else {
+                        Circle().hidden()
+                    }
+                } }
+            } }
+            .padding()
+            HStack { ForEach(0..<6) { hangOrdx in
+                VStack { ForEach(-1..<8) { hangIdx in
+                    if hangOrdx == 0 && hangIdx == -1 {
+                        YueDian(yueFeng: li.month.monthName)
+                    }
+                    else if hangIdx == 0 {
+                        XingZhouDian(zi: NumConverter.convert(li.month.suRiXingZhou + hangOrdx)+"週")//.hidden()
+                    }
+                    else if hangIdx > 0 {
+                        ZStack {
+                            RiDian(ri: li.riList[ hangOrdx*7+hangIdx-1 ])
+                                .onTapGesture(count:1, perform: {
+                                    li.chooseDay(hangOrdx*7+hangIdx-1)
+                                })
+//                            if li.riList[ hangOrdx*7+hangIdx-1 ].name == "初一" {
+//                                YueBiao(yueFeng: li.month.monthName).hidden()
+//                            }
                         }
                     }
-                }
-            }
+                    else {
+                        Circle().hidden()
+                    }
+                } }
+            } }
+            .padding()
         }
-    }
-    
-    static func getLabel(hangOrd ord: Int, hangId id: Int, usePlugin: Bool = false) -> [[Character]] {
-        if ord == 1 {
-            return [Array( qiZheng[id - 2] )]
-        }
-        else if id == 1 {
-            if usePlugin && ord == 6 {
-                return [Array( "五" ), Array( "│" ),  Array( "六" )]
-            }
-            else {
-                return [Array( xingZhou[ord - 2] )]
-            }
-        }
-        return []
-    }
-    
-    enum colorScheme {
-        case background
-        case foreground
-        case highlight
     }
     
     static let xingZhou = ["一", "二", "三", "四", "五", "六"]
-    static let qiZheng = ["日曜日", "月曜日", "水曜日", "火曜日", "木曜日", "金曜日", "土曜日"]
+    static let qiZheng = ["日", "月", "水", "火", "木", "金", "土"]
 }
 
-struct LabelGrid: View {
+struct YueDian: View {
+    var body: some View {
+        ZStack {
+            Circle().foregroundColor(CalendarRed.scheme(.nippon))
+            ShuPaiZi(wenZi: yueFeng, ziHao: .caption)
+        }
+    }
+    
+    var yueFeng: String
+}
+
+struct YueBiao: View {
+    var body: some View {
+        GeometryReader { g in
+            ShuPaiZi(wenZi: yueFeng, ziHao: .caption)
+                .padding(2)
+                .background(RoundedRectangle(cornerRadius: 2.5)
+                                .foregroundColor(CalendarRed.scheme(.nippon)))
+                .font(.caption)
+                .position(x: 0, y: g.size.height/2 - g.size.width/2)
+//                .position(x: g.size.width/2, y: g.size.height/2 - g.size.width * 0.75)
+                
+        }
+    }
+    
+    var yueFeng: String
+}
+struct QiZhengDian: View {
+    var body: some View {
+        GeometryReader { g in
+            Circle().hidden()
+                .background( ZStack {
+                    RoundedRectangle(cornerRadius: 2.5)
+                        .frame(width: g.size.width*0.333, height: g.size.width*0.333, alignment: .topLeading)
+                        .position(x: 0, y: 0)
+                        
+                    Text(zi)
+                        .font(.caption)
+                        .colorInvert()
+                        .position(x: 0, y: 0)
+                } )
+        }
+    }
+    
+    var zi: String
+}
+
+
+struct XingZhouDian: View {
     var body: some View {
         ZStack{
             Circle()
-            HuoZi(contents: texts, isHorizontal: true).foregroundColor(Color(UIColor.systemBackground))
+            ShuPaiZi(wenZi: zi, ziHao: .caption2)
+                .colorInvert()
         }
     }
     
     
-    var texts: [[Character]]
+    var zi: String
 }
 
-struct RiGrid: View {
+struct RiDian: View {
     var body: some View {
-        return ZStack{
-            if ri.isChoosen {
+        ZStack{
+            if ri.isToday {
                 Circle().foregroundColor(CalendarRed.scheme(.Soviet))
                 HuoZi(contents: ri.subNames).foregroundColor(.white)
             }
-            else if ri.isToday {
+            else if ri.isChoosen {
                 Circle().stroke()
                     .foregroundColor(CalendarRed.scheme(.China))
-                    .background(Circle().foregroundColor(.white))
-                HuoZi(contents: ri.subNames).foregroundColor(.black)
+                    .background(Circle())
+                HuoZi(contents: ri.subNames).colorInvert()
             }
             else {
                 Circle().stroke()
@@ -134,110 +158,50 @@ struct RiGrid: View {
             }
         }
     }
-    
-    var ri: Ri
-}
-
-struct RiGrid2: View {
-    @ObservedObject var calendar: ChineseCalendar
-    
-    var body: some View {
-        
-        ZStack {
-
-            ZStack {
-            if ri.isChoosen {
-                Circle().trim(from: 0.25, to: 0.75).rotation(.radians(.pi)).foregroundColor(CalendarRed.scheme(.Soviet))
-                Circle().trim(from: 0.25, to: 0.75).rotation(.radians(.pi)).stroke().fill(CalendarRed.scheme(.Soviet))
-                HStack(spacing: 2) {
-                    HuoZi(spacing: 0, contents: ri.subNames).foregroundColor(.white)
-                    HuoZi(spacing: 0, contents: ri2.subNames).foregroundColor(.white).hidden()
-                }
-            }
-            else if ri.isToday {
-                Circle().trim(from: 0.25, to: 0.75).rotation(.radians(.pi)).fill()
-                    .foregroundColor(.white)
-                Circle().trim(from: 0.25, to: 0.75).rotation(.radians(.pi)).stroke()
-                    .foregroundColor(CalendarRed.scheme(.China))
+//    {
+//        ZStack{
+//            if ri.isChoosen {
+//                Circle().foregroundColor(CalendarRed.scheme(.Soviet))
+//                HStack {
+//                    ShuPaiZi(wenZi: ri.name, ziHao: .caption)
+//                        .foregroundColor(.white)
+//                    ShuPaiZi(wenZi: ri.zodiac, ziHao: .caption2)
+//                        .foregroundColor(.white)
+//                }
+//            }
+//            else if ri.isToday {
+//                Circle().stroke()
+//                    .foregroundColor(CalendarRed.scheme(.China))
 //                    .background(Circle().foregroundColor(.white))
-                HStack(spacing: 2) {
-                    HuoZi(spacing: 0, contents: ri.subNames).foregroundColor(.black)
-                    HuoZi(spacing: 0, contents: ri2.subNames).foregroundColor(.black).hidden()
-                }
-            }
-            else {
-                Circle().trim(from: 0.25, to: 0.75).rotation(.radians(.pi)).stroke()
-                HStack(spacing: 2) {
-                    HuoZi(spacing: 0, contents: ri.subNames)
-                    HuoZi(spacing: 0, contents: ri2.subNames).hidden()
-                }
-            }
-            }
-            .onTapGesture(perform: {
-                calendar.chooseDay(28)
-            })
-            
-            ZStack {
-            if ri2.isChoosen {
-                Circle().trim(from: 0.25, to: 0.75).foregroundColor(CalendarRed.scheme(.Soviet))
-                Circle().trim(from: 0.25, to: 0.75).stroke().fill(CalendarRed.scheme(.Soviet))
-                HStack(spacing: 2) {
-                    HuoZi(spacing: 0, contents: ri.subNames).foregroundColor(.white).hidden()
-                    HuoZi(spacing: 0, contents: ri2.subNames).foregroundColor(.white)
-                }
-            }
-            else if ri2.isToday {
-                Circle().trim(from: 0.25, to: 0.75).fill()
-                    .foregroundColor(.white)
-                Circle().trim(from: 0.25, to: 0.75).stroke().foregroundColor(CalendarRed.scheme(.China))
-                HStack(spacing: 2) {
-                    HuoZi(spacing: 0, contents: ri.subNames).foregroundColor(.black).hidden()
-                    HuoZi(spacing: 0, contents: ri2.subNames).foregroundColor(.black)
-                }
-            }
-            else {
-                Circle().trim(from: 0.25, to: 0.75).stroke()
-                HStack(spacing: 2) {
-                    HuoZi(spacing: 0, contents: ri.subNames).hidden()
-                    HuoZi(spacing: 0, contents: ri2.subNames)
-                }
-            }
-            }
-            .onTapGesture(perform: {
-                calendar.chooseDay(35)
-            })
-            
-            GeometryReader { geometry in
-                Rectangle().stroke().size(width: 0, height: geometry.size.width)
-                    .position(x: 0.1, y: geometry.size.height - geometry.size.width/2)
-                    .foregroundColor({
-                        if ri.isChoosen || ri2.isChoosen {
-                            return CalendarRed.scheme(.Soviet)
-                        }
-                        else if ri.isToday || ri2.isToday {
-                            return CalendarRed.scheme(.China)
-                        }
-                        else {
-                            return .primary
-                        }
-                    }())
-            }
-        }
-    }
-    
+//                HStack {
+//                    ShuPaiZi(wenZi: ri.name, ziHao: .caption)
+//                        .foregroundColor(.black)
+//                    ShuPaiZi(wenZi: ri.zodiac, ziHao: .caption2)
+//                        .foregroundColor(.black)
+//                }
+//            }
+//            else {
+//                Circle().stroke()
+//                HStack {
+//                    ShuPaiZi(wenZi: ri.name, ziHao: .caption)
+//                    ShuPaiZi(wenZi: ri.zodiac, ziHao: .caption2)
+//                }
+//            }
+//        }
+//    }
     
     var ri: Ri
-    var ri2: Ri
 }
 
 struct HuoZi: View {
     var body: some View {
-        HStack(spacing: spacing) {
-            if !isHorizontal {
+        GeometryReader { g in
+            HStack(spacing: spacing) {
                 VStack {
                     ForEach(0..<contents[0].count) { j in
                         Text(String(contents[0][j]))
-                            .font(.caption).fontWeight(.bold)
+                            .font(.system(size:(g.size.width < g.size.height ? g.size.width * 0.2 : g.size.height * 0.2)))
+                            .fontWeight(.bold)
                     }
                 }
                 VStack(spacing: 2) {
@@ -245,40 +209,18 @@ struct HuoZi: View {
                         VStack(spacing: 0) {
                             ForEach(0..<contents[i].count) { j in
                                 Text(String(contents[i][j]))
-                                    .font(.system(size: 8))
+                                    .font(.system(size:(g.size.width < g.size.height ? g.size.width * 0.15 : g.size.height * 0.15)))
                             }
                         }
                     }
                 }
             }
-            else {
-                ForEach(0..<contents.count) { i in
-                    VStack(spacing: 0) {
-                        ForEach(0..<contents[i].count) { j in
-                            Text(String(contents[i][j]))
-                                .font(.caption).fontWeight(.bold)
-                        }
-                    }
-                }
-            }
+            .position(x: g.size.width/2, y: g.size.height/2)
         }
     }
-    
+
     var spacing: CGFloat = 2
     var contents: [[Character]] = []
-    var isHorizontal: Bool = false
-}
-
-struct YearBar: View {
-    var body: some View {
-        VStack(alignment: .trailing, spacing: nil) {
-            Text(yearSubName).font(.caption)
-            Text(yearName)
-        }
-    }
-    
-    var yearName: String
-    var yearSubName: String
 }
 
 enum RedType {
@@ -302,29 +244,17 @@ struct CalendarRed {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        
-        
-        
-        ContentView(calendar: ChineseCalendar(date: {
-            let formatter = DateFormatter()
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-            return formatter.date(from:"1950-03-16T00:00:00+0800")!}() ))
+        ContentView(li: LiJianZuo())
             .preferredColorScheme(.dark)
+        
+//        ContentView(calendar: LiJianZuo(date: {
+//            let formatter = DateFormatter()
+//            formatter.locale = Locale(identifier: "en_US_POSIX")
+//            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+//            return formatter.date(from:"1900-01-01T00:00:00+0800")!}() ))
+//            .preferredColorScheme(.dark)
+            
     }
-    
-//    static let formatter = DateFormatter()
 }
