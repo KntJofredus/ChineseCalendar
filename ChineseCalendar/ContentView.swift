@@ -32,9 +32,60 @@ struct ContentView: View {
 
 struct YueBiaoXiaoTu: View {
     @ObservedObject var li: LiJianZuo
+    @State var pianLiang = CGSize.zero
+    @State var yueBiaoQian = false
+    @State private var selectedTab = 1
+    
+    let minTabIdx = 0
+    let maxTabIdx = 2
+    let minDragTranslationForSwipe: CGFloat = 30
 
     var body: some View {
         ZStack {
+            TabView(selection: $selectedTab) { ForEach(minTabIdx ..< (maxTabIdx+1)) { tabIdx in
+                ZStack {
+                    Rectangle().colorInvert()
+                    HStack { ForEach(0..<6) { hangOrdx in
+                        VStack { ForEach(-1..<8) { hangIdx in
+                            if hangOrdx == 0 && hangIdx == -1 {
+                                YueDian(yueFeng: String(tabIdx) + li.month.monthName)
+                            }
+                            else if hangIdx == 0 {
+                                XingZhouDian(zi: NumConverter.convert(li.month.suRiXingZhou + hangOrdx)+"週")//.hidden()
+                            }
+                            else if hangIdx > 0 {
+                                ZStack {
+                                    RiDian(ri: li.riList[ hangOrdx*7+hangIdx-1 ])
+                                        .onTapGesture(count:1, perform: {
+                                            li.chooseDay(hangOrdx*7+hangIdx-1)
+                                        })
+                                    if li.riList[ hangOrdx*7+hangIdx-1 ].name == "初一" && yueBiaoQian {
+                                        YueBiao(yueFeng: li.month.monthName)
+                                    }
+                                }
+                            }
+                            else {
+                                Circle().hidden()
+                            }
+                        } }
+                    } }
+                }
+                .tabItem {
+                    Text(String(tabIdx))
+                }
+                .tag(tabIdx)
+                .padding()
+                .gesture(DragGesture()
+                            .onEnded {
+                                tuoDong in
+                                self.handleSwipe(translation: tuoDong.translation.width)
+                            }
+                )
+            } }
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .animation(.easeInOut)
+            .transition(.slide)
+            
             HStack { ForEach(0..<6) { hangOrdx in
                 VStack { ForEach(-1..<8) { hangIdx in
                     if hangOrdx == 0 && hangIdx > 0{
@@ -46,31 +97,14 @@ struct YueBiaoXiaoTu: View {
                 } }
             } }
             .padding()
-            HStack { ForEach(0..<6) { hangOrdx in
-                VStack { ForEach(-1..<8) { hangIdx in
-                    if hangOrdx == 0 && hangIdx == -1 {
-                        YueDian(yueFeng: li.month.monthName)
-                    }
-                    else if hangIdx == 0 {
-                        XingZhouDian(zi: NumConverter.convert(li.month.suRiXingZhou + hangOrdx)+"週")//.hidden()
-                    }
-                    else if hangIdx > 0 {
-                        ZStack {
-                            RiDian(ri: li.riList[ hangOrdx*7+hangIdx-1 ])
-                                .onTapGesture(count:1, perform: {
-                                    li.chooseDay(hangOrdx*7+hangIdx-1)
-                                })
-//                            if li.riList[ hangOrdx*7+hangIdx-1 ].name == "初一" {
-//                                YueBiao(yueFeng: li.month.monthName).hidden()
-//                            }
-                        }
-                    }
-                    else {
-                        Circle().hidden()
-                    }
-                } }
-            } }
-            .padding()
+        }
+    }
+    
+    private func handleSwipe(translation: CGFloat) {
+        if translation < minDragTranslationForSwipe {
+            selectedTab = max(selectedTab - 1, minTabIdx)
+        } else  if translation > -minDragTranslationForSwipe {
+            selectedTab = min(selectedTab + 1, maxTabIdx)
         }
     }
     
@@ -141,21 +175,26 @@ struct XingZhouDian: View {
 
 struct RiDian: View {
     var body: some View {
-        ZStack{
-            if ri.isToday {
-                Circle().foregroundColor(CalendarRed.scheme(.Soviet))
-                HuoZi(contents: ri.subNames).foregroundColor(.white)
+        if ri.inMonth {
+            ZStack{
+                if ri.isToday {
+                    Circle().foregroundColor(CalendarRed.scheme(.Soviet))
+                    HuoZi(contents: ri.subNames).foregroundColor(.white)
+                }
+                else if ri.isChoosen {
+                    Circle().stroke()
+                        .foregroundColor(CalendarRed.scheme(.China))
+                        .background(Circle())
+                    HuoZi(contents: ri.subNames).colorInvert()
+                }
+                else {
+                    Circle().stroke()
+                    HuoZi(contents: ri.subNames)
+                }
             }
-            else if ri.isChoosen {
-                Circle().stroke()
-                    .foregroundColor(CalendarRed.scheme(.China))
-                    .background(Circle())
-                HuoZi(contents: ri.subNames).colorInvert()
-            }
-            else {
-                Circle().stroke()
-                HuoZi(contents: ri.subNames)
-            }
+        }
+        else {
+            Circle().foregroundColor(Color(UIColor.systemFill))
         }
     }
 //    {
@@ -195,27 +234,29 @@ struct RiDian: View {
 
 struct HuoZi: View {
     var body: some View {
-        GeometryReader { g in
-            HStack(spacing: spacing) {
-                VStack {
-                    ForEach(0..<contents[0].count) { j in
-                        Text(String(contents[0][j]))
-                            .font(.system(size:(g.size.width < g.size.height ? g.size.width * 0.2 : g.size.height * 0.2)))
-                            .fontWeight(.bold)
+        if (contents.count > 0) {
+            GeometryReader { g in
+                HStack(spacing: spacing) {
+                    VStack {
+                        ForEach(0..<contents[0].count) { j in
+                            Text(String(contents[0][j]))
+                                .font(.system(size:(g.size.width < g.size.height ? g.size.width * 0.2 : g.size.height * 0.2)))
+                                .fontWeight(.bold)
+                        }
                     }
-                }
-                VStack(spacing: 2) {
-                    ForEach(1..<contents.count) { i in
-                        VStack(spacing: 0) {
-                            ForEach(0..<contents[i].count) { j in
-                                Text(String(contents[i][j]))
-                                    .font(.system(size:(g.size.width < g.size.height ? g.size.width * 0.15 : g.size.height * 0.15)))
+                    VStack(spacing: 2) {
+                        ForEach(1..<contents.count) { i in
+                            VStack(spacing: 0) {
+                                ForEach(0..<contents[i].count) { j in
+                                    Text(String(contents[i][j]))
+                                        .font(.system(size:(g.size.width < g.size.height ? g.size.width * 0.15 : g.size.height * 0.15)))
+                                }
                             }
                         }
                     }
                 }
+                .position(x: g.size.width/2, y: g.size.height/2)
             }
-            .position(x: g.size.width/2, y: g.size.height/2)
         }
     }
 

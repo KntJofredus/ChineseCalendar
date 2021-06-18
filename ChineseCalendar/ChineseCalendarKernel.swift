@@ -100,24 +100,29 @@ struct CalendarSlip {
             let dayIdx = idx + 1 - month.suRiQiZheng
             let inMonth = (dayIdx >=  0 && dayIdx < month.numDays)
             
-            let name = inMonth ? Cina.RiName[ dayIdx ] : ""
-            let zodiac = GanZhi.convert(Integer.mod(b: dayIdx + month.suRiGanZhi, n: 60))
-            var subtitles: Array<Array<Character>> = [ Array(name), Array(zodiac) ]
-            if let festival = month.lunarFests[dayIdx + 1] {
-                subtitles.append(Array( festival ))
-            }
-            if dayIdx < month.numDays {
-                if let festival = month.lunarFests[dayIdx - month.numDays] {
+            var name = ""
+            var zodiac = ""
+            var subtitles: Array<Array<Character>> = []
+            var isToday = false
+            var isChoosen = false
+            
+            if inMonth {
+                name = Cina.RiName[ dayIdx ]
+                zodiac = GanZhi.convert(Integer.mod(b: dayIdx + month.suRiGanZhi, n: 60))
+                subtitles = [ Array(name), Array(zodiac) ]
+                if let festival = month.lunarFests[dayIdx + 1] {
                     subtitles.append(Array( festival ))
                 }
+                if dayIdx < month.numDays {
+                    if let festival = month.lunarFests[dayIdx - month.numDays] {
+                        subtitles.append(Array( festival ))
+                    }
+                }
+                isToday = (dayIdx + 1 == day.dayId)
+                isChoosen = (dayIdx + 1 == day.dayId)
             }
-            riList.append(Ri(id: idx,
-                             name: name,
-                             zodiac: zodiac,
-                             subNames: subtitles,
-                             inMonth: inMonth,
-                             isToday: dayIdx + 1 == day.dayId,
-                             isChoosen: dayIdx + 1 == day.dayId))
+            let ri = Ri(id: idx, name: name, zodiac: zodiac, subNames: subtitles, inMonth: inMonth, isToday: isToday, isChoosen: isChoosen)
+            riList.append(ri)
         }
         
         return riList

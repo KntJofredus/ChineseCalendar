@@ -20,6 +20,9 @@ class LiJianZuo: ObservableObject {
         slip.chooseDay(day)
     }
     
+//    func toggleYueBiao(_ yueBiao: Bool) -> Void {
+//        self.yueBiao = yueBiao
+//    }
     
     // MARK: - Access
     var yearName: String {
@@ -41,6 +44,12 @@ class LiJianZuo: ObservableObject {
     var riList: Array<Ri> {
         slip.riList
     }
+    
+//    var useYueBiao: Bool {
+//        self.yueBiao
+//    }
+//
+//    @Published private var yueBiao: Bool = false
     
     static let xingZhou = ["一", "二", "三", "四", "五", "六"]
     static let qiZheng = ["日曜日", "月曜日", "水曜日", "火曜日", "木曜日", "金曜日", "土曜日"]
