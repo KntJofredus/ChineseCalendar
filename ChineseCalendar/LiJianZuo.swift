@@ -8,49 +8,61 @@
 import SwiftUI
 
 class LiJianZuo: ObservableObject {
-    @Published private var slip: CalendarSlip
+    @Published private var li: LI
     
     init(date: Date = Date()) {
-        self.slip = CalendarSlip(date)
+        self.li = LI(date)
     }
     
     
     // MARK: - Intent
-    func chooseDay(_ day: Int) -> Void {
-        slip.chooseDay(day)
+    func chooseDay(_ riQ: Int) -> Void {
+         li.zeRi(riQ)
     }
     
-//    func toggleYueBiao(_ yueBiao: Bool) -> Void {
-//        self.yueBiao = yueBiao
-//    }
+    func backwardMonth() -> Void {
+        li.zeYue(.ShangYue)
+    }
+    
+    func forwartMonth() -> Void {
+        li.zeYue(.CiYue)
+    }
     
     // MARK: - Access
-    var yearName: String {
-        slip.year.dynastyTitle + slip.year.dynastyName + slip.year.eraName + NumConverter.convert(slip.year.eraYearId) + "年"
+    var nianSanYe: Array<NianYuan> {
+        li.nianSanYe
     }
     
-    var yearSubName: String {
-        "褒成宣尼" + NumConverter.convert(slip.year.yearId) + "年"
+    var dangNian: NianYuan {
+        li.nianSanYe[1]
     }
     
-    var month: MonthData {
-        slip.month
+    var nianFeng: String {
+        li.nianSanYe[1].nianFen
     }
     
-    var dayInfo: (id: Int, luminId: Int, luminOrd: Int) {
-        (slip.day.dayId, slip.day.luminId, slip.day.luminOrd)
+    var dangYueJiNian: String {
+        li.yueSanYe[1].dangYue_JiNian
     }
     
-    var riList: Array<Ri> {
-        slip.riList
+    var zhengTong_JiNian: Array<String> {
+        li.nianSanYe[1].zhengTong_JiNian
     }
     
-//    var useYueBiao: Bool {
-//        self.yueBiao
-//    }
-//
-//    @Published private var yueBiao: Bool = false
+    var bieChao_JiNian: Array<String> {
+        li.nianSanYe[1].bieChao_JiNian
+    }
     
-    static let xingZhou = ["一", "二", "三", "四", "五", "六"]
-    static let qiZheng = ["日曜日", "月曜日", "水曜日", "火曜日", "木曜日", "金曜日", "土曜日"]
+    var yue_Ji: Array<YueYuan> {
+        li.yueSanYe
+    }
+    
+    var dangYue: YueYuan {
+        li.yueSanYe[1]
+    }
+    
+    
+    var dangRi: RiYuan {
+        li.dangRi.deRiYuan()
+    }
 }

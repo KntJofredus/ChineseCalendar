@@ -12,14 +12,13 @@ struct ChineseCalendarApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView(li: calendar)
-//            LiBiaoZuo(li: LiJianZuo())
         }
     }
     
-//    let calendar = LiJianZuo(date: {
-//                                   let formatter = DateFormatter()
-//                                   formatter.locale = Locale(identifier: "en_US_POSIX")
-//                                   formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
-//                                   return formatter.date(from:"1900-01-01T00:00:00+0800")!}())
-    let calendar = LiJianZuo()
+    let calendar = LiJianZuo(date: {
+                                   let formatter = DateFormatter()
+                                   formatter.locale = Locale(identifier: "en_US_POSIX")
+                                   formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+                                   return formatter.date(from:"1950-01-01T00:00:00+0800")!}())
+//    let calendar = LiJianZuo()
 }

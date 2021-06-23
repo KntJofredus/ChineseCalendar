@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B12CB8E326782A5100A17F59 /* LiBiaoZuo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B12CB8E226782A5100A17F59 /* LiBiaoZuo.swift */; };
 		B1C1EBAE267C9D8200B2C269 /* KangXiZiDianTi.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B1C1EBAD267C9D8200B2C269 /* KangXiZiDianTi.ttf */; };
 		B1C90C742670D6C100CAC2F0 /* ChineseCalendarApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C90C732670D6C100CAC2F0 /* ChineseCalendarApp.swift */; };
 		B1C90C762670D6C100CAC2F0 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1C90C752670D6C100CAC2F0 /* ContentView.swift */; };
@@ -18,7 +17,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		B12CB8E226782A5100A17F59 /* LiBiaoZuo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiBiaoZuo.swift; sourceTree = "<group>"; };
 		B1C1EBAD267C9D8200B2C269 /* KangXiZiDianTi.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = KangXiZiDianTi.ttf; sourceTree = "<group>"; };
 		B1C90C702670D6C100CAC2F0 /* ChineseCalendar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ChineseCalendar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1C90C732670D6C100CAC2F0 /* ChineseCalendarApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChineseCalendarApp.swift; sourceTree = "<group>"; };
@@ -62,7 +60,6 @@
 			children = (
 				B1C90C732670D6C100CAC2F0 /* ChineseCalendarApp.swift */,
 				B1C90C752670D6C100CAC2F0 /* ContentView.swift */,
-				B12CB8E226782A5100A17F59 /* LiBiaoZuo.swift */,
 				B1C1EBAD267C9D8200B2C269 /* KangXiZiDianTi.ttf */,
 				B1C90C862671E6AB00CAC2F0 /* LiJianZuo.swift */,
 				B1C90C822670E08500CAC2F0 /* ChineseCalendarKernel.swift */,
@@ -153,7 +150,6 @@
 			files = (
 				B1C90C762670D6C100CAC2F0 /* ContentView.swift in Sources */,
 				B1C90C872671E6AB00CAC2F0 /* LiJianZuo.swift in Sources */,
-				B12CB8E326782A5100A17F59 /* LiBiaoZuo.swift in Sources */,
 				B1C90C832670E08500CAC2F0 /* ChineseCalendarKernel.swift in Sources */,
 				B1C90C742670D6C100CAC2F0 /* ChineseCalendarApp.swift in Sources */,
 			);
