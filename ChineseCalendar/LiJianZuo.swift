@@ -33,6 +33,10 @@ class LiJianZuo: ObservableObject {
         li.nianSanYe
     }
     
+    var yueSanYe: Array<YueYuan> {
+        li.yueSanYe
+    }
+    
     var dangNian: NianYuan {
         li.nianSanYe[1]
     }

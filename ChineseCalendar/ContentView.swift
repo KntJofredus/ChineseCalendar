@@ -13,22 +13,16 @@ struct ContentView: View {
     
     @ObservedObject var li: LiJianZuo
     
+    @State var titleFrame: CGRect = CGRect()
+    
     var body: some View {
         ZStack {
             Color(UIColor.systemGray6)
                 .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/)
             
-            VStack(alignment: .center, spacing: nil) {
-
-                YueNianFeng(nianFeng: li.nianFeng,
-                            dangYue_JiNian: li.dangYue.dangYue_JiNian,
-                            zhengTong_JiNian: li.zhengTong_JiNian)
-                    .environment(\.layoutDirection, .rightToLeft)
-                    .padding(5)
-                YueLiSanTu(li: li)
-                    .environment(\.layoutDirection, .rightToLeft)
-                    .background(Rectangle().colorInvert())
-            }
+            YueLiSanTu(li: li)
+                .environment(\.layoutDirection, .rightToLeft)
+                .background(Rectangle().colorInvert())
         }
     }
 }
@@ -36,12 +30,10 @@ struct ContentView: View {
 struct YueNianFeng: View {
     var body: some View {
         VStack {
-            Text(nianFeng).font(.caption)
-//            ForEach(0 ..< zhengTong_JiNian.count) { diCi in
-//                Text(zhengTong_JiNian[diCi])
-//            }
-            Text(dangYue_JiNian)
+            Text(String(nianFeng.reversed())).font(.caption)
+            Text(String(dangYue_JiNian.reversed()))
         }
+        .padding(.bottom)
     }
     
     var nianFeng: String
@@ -61,37 +53,57 @@ struct YueLiSanTu: View {
     var body: some View {
         ZStack {
             TabView(selection: $dangYeQ) { ForEach(0 ..< 3) { yeQ in
-                YueLiXiaoTu(li: li, yeQ: yeQ)
-                    .tabItem {
-                        Text(String(yeQ))
-                    }
-                    .tag(yeQ)
-                    .padding()
-                    .onDisappear(perform: {
-                        if dangYeQ < 1 {
-                            li.backwardMonth()
+                VStack(alignment: .center, spacing: nil) {
+                    YueNianFeng(nianFeng: li.nianSanYe[li.yueSanYe[yeQ].nianQ].nianFen,
+                                dangYue_JiNian: li.yueSanYe[yeQ].dangYue_JiNian)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(UIColor.systemGray6))
+                    
+                    YueLiXiaoTu(li: li, yeQ: yeQ, xingZhouShu: (li.yueSanYe[yeQ].liuXingZhouF ? 6 : 5))
+                        .tabItem {
+                            Text(String(yeQ))
                         }
-                        else if dangYeQ > 1 {
-                            li.forwartMonth()
-                        }
-                        self.dangYeQ = 1
-                    })
+                        .tag(yeQ)
+                        .padding()
+                        .onDisappear(perform: {
+                            if dangYeQ < 1 {
+                                li.backwardMonth()
+                            }
+                            else if dangYeQ > 1 {
+                                li.forwartMonth()
+                            }
+                            self.dangYeQ = 1
+                        })
+                }
             } }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             
-            HStack { ForEach(0..<6) { hangOrdx in
-                VStack { ForEach(-1..<8) { hangIdx in
-                    if hangOrdx == 0 && hangIdx > 0{
-                        QiZhengDian(zi: YueLiSanTu.qiZheng[ hangIdx - 1 ])
-                    }
-                    else {
-                        Circle().hidden()
-                    }
+            VStack(alignment: .center, spacing: nil) {
+                YueNianFeng(nianFeng: li.nianFeng,
+                            dangYue_JiNian: li.dangYue.dangYue_JiNian,
+                            zhengTong_JiNian: li.zhengTong_JiNian)
+                    .hidden()
+                
+                GeometryReader { geo in
+                HStack { ForEach(0..<6) { hangOrdx in
+                    VStack { ForEach(-1..<8) { hangIdx in
+                        if hangOrdx == 0 && hangIdx > 0{
+                            QiZhengDian(zi: YueLiSanTu.qiZheng[ hangIdx - 1 ])
+                        }
+                        else {
+                            Circle().hidden()
+                        }
+                    } }
                 } }
-            } }
-            .padding()
+                .position(x: geo.frame(in: .local).midX, y: geo.frame(in: .local).midY)
+                }
+                .padding()
+            }
+            
         }
     }
+    
+    
     
     static let xingZhou = ["一", "二", "三", "四", "五", "六"]
     static let qiZheng = ["日", "月", "水", "火", "木", "金", "土"]
@@ -99,44 +111,65 @@ struct YueLiSanTu: View {
 
 struct YueLiXiaoTu: View {
     @ObservedObject var li: LiJianZuo
-//    @ObservedObject var yue: YueYuan
     
-    @State var pianLiang = CGSize.zero
     @State var yueBiaoF = false
     
     var body: some View {
-        ZStack {
-            Rectangle().colorInvert()
-            
-            HStack { ForEach(0..<6) { hangOrdx in
-                VStack { ForEach(-1..<8) { hangIdx in
-                    if hangOrdx == 0 && hangIdx == -1 {
-                        YueDian(yueFeng: li.yue_Ji[yeQ].yueFen)
-                    }
-                    else if hangIdx == 0 {
-                        XingZhouDian(zi: li.yue_Ji[yeQ].xingZhou_Ji[hangOrdx] )//.hidden()
-                    }
-                    else if hangIdx > 0 {
-                        ZStack {
-                            RiDian(ri: li.yue_Ji[yeQ].riYuan_Ji[ hangOrdx*7+hangIdx-1 ])
-                                .onTapGesture(count:1, perform: {
-                                     li.chooseDay(hangOrdx*7+hangIdx-1)
-                                })
-//                            if yue.shuoRi_QiZheng == hangOrdx*7+hangIdx && yueBiaoF {
-//                                YueBiao(yueFeng: li.yue_Ji[yeQ].yueFen)
-//                            }
+        GeometryReader { geo in
+            ZStack(alignment: .center) {
+                Rectangle().colorInvert()
+                
+                HStack {
+                    ForEach(0..<6) { hangOrdx in
+                        if hangOrdx < xingZhouShu {
+                            XingZhouHang(li: li, yeQ: yeQ, hangOrdx: hangOrdx)
+                                .frame(width: geo.frame(in: .global).width / 6.5 )
+                        }
+                        if hangOrdx < xingZhouShu-1 {
+                            Spacer()
                         }
                     }
-                    else {
-                        Circle().hidden()
-                    }
-                } }
-            } }
+                }
+                .position(x: geo.frame(in: .local).midX, y: geo.frame(in: .local).midY)
+            }
         }
         
     }
     
     var yeQ: Int
+    var xingZhouShu: Int = 5
+}
+
+struct XingZhouHang: View {
+    @ObservedObject var li: LiJianZuo
+    
+    var body: some View {
+        VStack { ForEach(-1..<8) { hangIdx in
+            if hangOrdx == 0 && hangIdx == -1 {
+                YueDian(yueFeng: li.yue_Ji[yeQ].yueFen)
+            }
+            else if hangIdx == 0 {
+                XingZhouDian(zi: li.yue_Ji[yeQ].xingZhou_Ji[hangOrdx] )//.hidden()
+            }
+            else if hangIdx > 0 {
+                ZStack {
+                    RiDian(ri: li.yue_Ji[yeQ].riYuan_Ji[ hangOrdx*7+hangIdx-1 ])
+                        .onTapGesture(count:1, perform: {
+                            li.chooseDay(hangOrdx*7+hangIdx-1)
+                        })
+                    //                            if yue.shuoRi_QiZheng == hangOrdx*7+hangIdx && yueBiaoF {
+                    //                                YueBiao(yueFeng: li.yue_Ji[yeQ].yueFen)
+                    //                            }
+                }
+            }
+            else {
+                Circle().hidden()
+            }
+        } }
+    }
+    
+    var yeQ: Int
+    var hangOrdx: Int
 }
 
 struct YueDian: View {

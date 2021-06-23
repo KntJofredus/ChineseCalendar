@@ -114,8 +114,8 @@ struct LI {
     }
     
     mutating func zeRi(_ xinDangRi_RiQ: Int) {
-        let xinDangRiX = xinDangRi_RiQ - yueSanYe[1].shuoRi_QiZheng + 1
-        if xinDangRiX < 1 || xinDangRiX > yueSanYe[1].riShu {
+        let xinDangRiQ = xinDangRi_RiQ - yueSanYe[1].shuoRi_QiZheng + 1
+        if xinDangRiQ < 0 || xinDangRiQ >= yueSanYe[1].riShu {
             return
         }
         if dangRi_YueQ >= 0 && dangRi_YueQ < 3 {
@@ -124,7 +124,7 @@ struct LI {
         dangRi_YueQ = 1
         dangRi_RiQ = xinDangRi_RiQ
         yueSanYe[dangRi_YueQ].riYuan_Ji[dangRi_RiQ]!.isChoosen = true
-        dangRiX = xinDangRiX
+        dangRiX = xinDangRiQ
         dangRi = Ri(yue: dangYue, riX: dangRiX)
     }
     
@@ -199,6 +199,8 @@ struct LI {
         }
         
         xinLi.yueSanYe = [ qianYue.deYueYuan(), yueSanYe[0], yueSanYe[1] ]
+        (xinLi.yueSanYe[0].nianQ, xinLi.yueSanYe[1].nianQ, xinLi.yueSanYe[2].nianQ) = (xinLi.shangYue.nianQian, xinLi.dangYue.nianQian, xinLi.ciYue.nianQian)
+        
         xinLi.yueSanYe[2].riYuan_Ji[dangRi_RiQ]!.isChoosen = false
         xinLi.yueSanYe[1].riYuan_Ji[xinLi.dangRi_RiQ]!.isChoosen = true
         if xinLi.jinRi_YueQ >= 0 && xinLi.jinRi_YueQ <= 2 {
@@ -277,6 +279,8 @@ struct LI {
         }
         
         xinLi.yueSanYe = [ yueSanYe[1], yueSanYe[2], houYue.deYueYuan() ]
+        (xinLi.yueSanYe[0].nianQ, xinLi.yueSanYe[1].nianQ, xinLi.yueSanYe[2].nianQ) = (xinLi.shangYue.nianQian, xinLi.dangYue.nianQian, xinLi.ciYue.nianQian)
+        
         xinLi.yueSanYe[0].riYuan_Ji[dangRi_RiQ]!.isChoosen = false
         xinLi.yueSanYe[1].riYuan_Ji[xinLi.dangRi_RiQ]!.isChoosen = true
         if xinLi.jinRi_YueQ >= 0 && xinLi.jinRi_YueQ <= 2 {
@@ -398,6 +402,10 @@ struct YueYuan: Identifiable {
     
     var riYuan_Ji: Array<RiYuan?> = [] // 日元集
     var xingZhou_Ji: Array<String> = [] // 星週集
+    
+    var nianQ: Int // 年签
+    
+    var liuXingZhouF: Bool = false // 六星週否
 }
 
 extension YueYuan {
@@ -429,6 +437,8 @@ extension YueYuan {
                 riYuan_Ji.append(nil)
             }
         }
+        
+        nianQ = yue.nianQian
     }
 }
 
@@ -481,6 +491,9 @@ struct Yue : Hashable {
                                         isChoosen: false) )
             }
             else {
+//                if xu == 35 {
+//                    break
+//                }
                 riYuan_Ji.append(nil)
             }
         }
@@ -492,7 +505,9 @@ struct Yue : Hashable {
                        shuoRi_QiZheng: shuoRi_QiZheng,
                        riShu: riShu,
                        riYuan_Ji: riYuan_Ji,
-                       xingZhou_Ji: xingZhou_Ji)
+                       xingZhou_Ji: xingZhou_Ji,
+                       nianQ: nianQian,
+                       liuXingZhouF: riYuan_Ji[35] != nil)
     }
     
     init(nian: Nian, yueX: Int, runYueF: Bool) {
