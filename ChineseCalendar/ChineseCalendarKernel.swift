@@ -290,6 +290,102 @@ struct LI {
         self = xinLi
     }
     
+    mutating func zeNian(_ fangXiang: ZeNian_FangXiang) {
+        var xinLi = self
+        
+        switch fangXiang {
+        case .QuNian:
+            xinLi.dangNianX -= 1
+            xinLi.dangNian = quNian
+        case .CiNian:
+            xinLi.dangNianX += 1
+            xinLi.dangNian = ciNian
+        }
+        if dangYue_RunF && xinLi.dangNian.runYueX != dangYueX {
+            xinLi.dangYue_RunF = false
+        }
+        xinLi.dangYue = Yue(nian: xinLi.dangNian, yueX: xinLi.dangYueX, runYueF: xinLi.dangYue_RunF)
+        xinLi.dangRiX = 1
+        xinLi.dangRi = Ri(yue: xinLi.dangYue, riX: xinLi.dangRiX)
+        
+        switch fangXiang {
+        case .QuNian:
+            xinLi.quNian = Nian(nianX: xinLi.dangNianX-1)
+            xinLi.ciNian = dangNian
+        case .CiNian:
+            xinLi.quNian = dangNian
+            xinLi.ciNian = Nian(nianX: xinLi.dangNianX+1)
+        }
+        
+        xinLi.nianSanYe = [
+            xinLi.quNian.deNianYuan(),
+            xinLi.dangNian.deNianYuan(),
+            xinLi.ciNian.deNianYuan()
+        ]
+        
+        var (shangYue_Nian, shangYue_YueX, shangYue_RunF): (Nian, Int, Bool)
+        if xinLi.dangYue_RunF {
+            (shangYue_Nian, shangYue_YueX, shangYue_RunF) = (xinLi.dangNian, xinLi.dangYueX, false)
+        }
+        else {
+            (shangYue_Nian, shangYue_YueX) = (xinLi.dangYueX == 1) ? (xinLi.quNian, 12) : (xinLi.dangNian, xinLi.dangYueX - 1)
+            shangYue_RunF = shangYue_Nian.runYueX == shangYue_YueX
+        }
+        xinLi.shangYue = Yue(nian: shangYue_Nian, yueX: shangYue_YueX, runYueF: shangYue_RunF)
+        xinLi.shangYue.nianQian = (shangYue_Nian.nianX == xinLi.dangNianX) ? 1 : 0
+        
+        var (ciYue_Nian, ciYue_YueX, ciYue_RunF) = (xinLi.dangNian, xinLi.dangYueX, xinLi.dangYue_RunF)
+        if xinLi.dangYue_RunF {
+            ciYue_YueX = xinLi.dangYueX + 1
+            ciYue_RunF = false
+        }
+        else if xinLi.dangNian.runYueX == xinLi.dangYueX {
+            ciYue_RunF = true
+        }
+        else {
+            ciYue_YueX = xinLi.dangYueX + 1
+            ciYue_RunF = false
+        }
+        if ciYue_YueX == 13 {
+            ciYue_Nian = xinLi.ciNian
+            ciYue_YueX = 1
+        }
+        xinLi.ciYue = Yue(nian: ciYue_Nian, yueX: ciYue_YueX, runYueF: ciYue_RunF)
+        xinLi.ciYue.nianQian = (ciYue_Nian.nianX == xinLi.dangNianX) ? 1 : 2
+        
+        xinLi.yueSanYe = [
+            xinLi.shangYue.deYueYuan(),
+            xinLi.dangYue.deYueYuan(),
+            xinLi.ciYue.deYueYuan()
+        ]
+        
+        switch fangXiang {
+        case .QuNian:
+            xinLi.jinRi_YueQ += LI.ziJinLi.dateComponents([.month], from: xinLi.dangYue.shuoRiQi, to: dangYue.shuoRiQi).month!
+        case .CiNian:
+            xinLi.jinRi_YueQ -= LI.ziJinLi.dateComponents([.month], from: dangYue.shuoRiQi, to: xinLi.dangYue.shuoRiQi).month!
+        }
+        xinLi.dangRi_YueQ = 1
+        if xinLi.jinRi_YueQ != 1 {
+            xinLi.dangRi_RiQ = xinLi.dangYue.shuoRi_QiZheng - 1
+        }
+        else {
+            xinLi.dangRi_RiQ = xinLi.jinRi_RiQ
+        }
+        
+        if xinLi.jinRi_YueQ >= 0 && xinLi.jinRi_YueQ <= 2 {
+            xinLi.yueSanYe[xinLi.jinRi_YueQ].riYuan_Ji[xinLi.jinRi_RiQ]!.isToday = true
+        }
+        xinLi.yueSanYe[xinLi.dangRi_YueQ].riYuan_Ji[xinLi.dangRi_RiQ]!.isChoosen = true
+        
+        self = xinLi
+    }
+    
+    enum ZeNian_FangXiang {
+        case QuNian
+        case CiNian
+    }
+    
     enum ZeYue_FangXiang {
         case ShangYue
         case CiYue
@@ -691,7 +787,7 @@ struct Nian {
     var yueLi: Array<Yue> = []
     
     func deNianYuan() -> NianYuan {
-        let nianFen = "褒成宣尼" + NumConverter.convert(nianX) + "年"
+        let nianFen = (publicPresent ? "公元" : "褒成宣尼") + NumConverter.convert(nianX) + "年"
         let ganZhi = GanZhi.convert(ganZhiX)
         
         var zhengTong_JiNian: [String] = []

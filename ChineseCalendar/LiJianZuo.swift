@@ -24,8 +24,16 @@ class LiJianZuo: ObservableObject {
         li.zeYue(.ShangYue)
     }
     
-    func forwartMonth() -> Void {
+    func forwardMonth() -> Void {
         li.zeYue(.CiYue)
+    }
+    
+    func QuNian() -> Void {
+        li.zeNian(.QuNian)
+    }
+    
+    func CiNian() -> Void {
+        li.zeNian(.CiNian)
     }
     
     // MARK: - Access

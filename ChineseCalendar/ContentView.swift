@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let publicPresent: Bool = false
+
 struct ContentView: View {
     @Environment(\.colorScheme) var colorScheme
     // colorScheme == .dark
@@ -21,19 +23,35 @@ struct ContentView: View {
                 .edgesIgnoringSafeArea(/*@START_MENU_TOKEN@*/.all/*@END_MENU_TOKEN@*/)
             
             YueLiSanTu(li: li)
-                .environment(\.layoutDirection, .rightToLeft)
                 .background(Rectangle().colorInvert())
         }
+        .environment(\.layoutDirection, .rightToLeft)
     }
 }
 
 struct YueNianFeng: View {
+    @ObservedObject var li: LiJianZuo
+    
     var body: some View {
-        VStack {
-            Text(String(nianFeng.reversed())).font(.caption)
-            Text(String(dangYue_JiNian.reversed()))
+        HStack {
+            Button("去年") {
+                li.QuNian()
+            }
+            .padding()
+            Spacer()
+            VStack {
+                Text(String(nianFeng.reversed())).font(.caption)
+                Text(String(dangYue_JiNian.reversed()))
+            }
+            .padding(.bottom)
+            Spacer()
+            Button("次年") {
+                li.CiNian()
+            }
+            .padding()
         }
-        .padding(.bottom)
+        .frame(maxWidth: .infinity)
+        .background(Color(UIColor.systemGray6))
     }
     
     var nianFeng: String
@@ -51,14 +69,13 @@ struct YueLiSanTu: View {
     let minDragTranslationForSwipe: CGFloat = 50
 
     var body: some View {
-        ZStack {
-            TabView(selection: $dangYeQ) { ForEach(0 ..< 3) { yeQ in
-                VStack(alignment: .center, spacing: nil) {
-                    YueNianFeng(nianFeng: li.nianSanYe[li.yueSanYe[yeQ].nianQ].nianFen,
-                                dangYue_JiNian: li.yueSanYe[yeQ].dangYue_JiNian)
-                        .frame(maxWidth: .infinity)
-                        .background(Color(UIColor.systemGray6))
-                    
+        VStack(alignment: .center, spacing: nil) {
+            YueNianFeng(li:li,
+                        nianFeng: li.nianSanYe[li.yueSanYe[dangYeQ].nianQ].nianFen,
+                        dangYue_JiNian: ( publicPresent ? li.nianSanYe[li.yueSanYe[dangYeQ].nianQ].ganZhi+"年" : li.yueSanYe[dangYeQ].dangYue_JiNian ) )
+            
+            ZStack {
+                TabView(selection: $dangYeQ) { ForEach(0 ..< 3) { yeQ in
                     YueLiXiaoTu(li: li, yeQ: yeQ, xingZhouShu: (li.yueSanYe[yeQ].liuXingZhouF ? 6 : 5))
                         .tabItem {
                             Text(String(yeQ))
@@ -70,40 +87,30 @@ struct YueLiSanTu: View {
                                 li.backwardMonth()
                             }
                             else if dangYeQ > 1 {
-                                li.forwartMonth()
+                                li.forwardMonth()
                             }
                             self.dangYeQ = 1
                         })
-                }
-            } }
-            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            
-            VStack(alignment: .center, spacing: nil) {
-                YueNianFeng(nianFeng: li.nianFeng,
-                            dangYue_JiNian: li.dangYue.dangYue_JiNian,
-                            zhengTong_JiNian: li.zhengTong_JiNian)
-                    .hidden()
-                
-                GeometryReader { geo in
-                HStack { ForEach(0..<6) { hangOrdx in
-                    VStack { ForEach(-1..<8) { hangIdx in
-                        if hangOrdx == 0 && hangIdx > 0{
-                            QiZhengDian(zi: YueLiSanTu.qiZheng[ hangIdx - 1 ])
-                        }
-                        else {
-                            Circle().hidden()
-                        }
-                    } }
                 } }
-                .position(x: geo.frame(in: .local).midX, y: geo.frame(in: .local).midY)
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                
+                VStack(alignment: .center, spacing: nil) {
+                    HStack { ForEach(0..<6) { hangOrdx in
+                        VStack { ForEach(-1..<8) { hangIdx in
+                            if hangOrdx == 0 && hangIdx > 0{
+                                QiZhengDian(zi: YueLiSanTu.qiZheng[ hangIdx - 1 ])
+                            }
+                            else {
+                                Circle().hidden()
+                            }
+                        } }
+                    } }
+                    .padding()
                 }
-                .padding()
+                
             }
-            
         }
     }
-    
-    
     
     static let xingZhou = ["一", "二", "三", "四", "五", "六"]
     static let qiZheng = ["日", "月", "水", "火", "木", "金", "土"]
